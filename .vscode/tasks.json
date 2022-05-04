@@ -9,11 +9,11 @@
         "-g",
         "C:\\Users\\agmar\\Programming\\github repositories\\My_showcase_of_skills\\C++ Projects\\PGE maze generator\\PGE_maze_generator.cpp",
 
-        "-o",
+        "--output",
         "C:\\Users\\agmar\\Programming\\github repositories\\My_showcase_of_skills\\C++ Projects\\PGE maze generator\\PGE_maze_generator.exe",
 
         // Optimization
-        "-O0",
+        "--optimize=0",
 
         "-static-libstdc++",
         "-lpthread",

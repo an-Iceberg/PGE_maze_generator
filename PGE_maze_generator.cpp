@@ -270,6 +270,7 @@ class MazeGenerator : public olc::PixelGameEngine
 			if (v_Maze[Position(x, y)] == NOT_SET)
 			{
 				// TODO: account for values other than 1, 2, 3 or 4
+				// TODO: account for NOT_SET
 				switch (direction)
 				{
 					case 1:
