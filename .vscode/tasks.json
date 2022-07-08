@@ -7,10 +7,10 @@
       "args": [
         "-fdiagnostics-color=always",
         "-g",
-        "C:\\Users\\agmar\\Programming\\github repositories\\My_showcase_of_skills\\C++ Projects\\PGE maze generator\\PGE_maze_generator.cpp",
+        "${workspaceFolder}\\PGE_maze_generator.cpp",
 
         "--output",
-        "C:\\Users\\agmar\\Programming\\github repositories\\My_showcase_of_skills\\C++ Projects\\PGE maze generator\\PGE_maze_generator.exe",
+        "${workspaceFolder}\\PGE_maze_generator.exe",
 
         // Optimization
         "--optimize=0",
@@ -30,7 +30,7 @@
         "-std=c++20",
       ],
       "options": {
-        "cwd": "C:\\Users\\agmar\\Programming\\github repositories\\My_showcase_of_skills\\C++ Projects\\PGE maze generator"
+        "cwd": "${workspaceFolder}"
       },
       "problemMatcher": [
         "$gcc"

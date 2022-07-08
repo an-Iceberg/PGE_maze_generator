@@ -19,23 +19,13 @@ class MazeGenerator : public olc::PixelGameEngine
 			SOUTH,
 			EAST
 		};
-
-		// Maze width in maze cells
-		int i_MazeWidth;
-
-		// Maze height in maze cells
-		int i_MazeHeight;
-
-		// Path width in pixels
-		int i_PathWidth;
-
-		// Vector of directions
-		std::vector<Direction> v_Maze;
-
-		int i_VisitedCells;
-
-		// Contains all maze cells who's direction has not yet been set
-		std::stack<std::pair<int, int>> i_Stack;
+		int i_MazeWidth; // Maze width in maze cells
+		int i_MazeHeight; // Maze height in maze cells
+		int i_PathWidth; // Path width in pixels
+		std::vector<Direction> v_Maze; // Vector of directions
+		// ? why is this necessary?
+		int i_VisitedCells; // Number of cells that has been visited
+		std::stack<olc::vi2d> i_Stack; // Contains all maze cells who's direction has not yet been set
 
 	public:
 		bool OnUserCreate() override
@@ -53,7 +43,7 @@ class MazeGenerator : public olc::PixelGameEngine
 				v_Maze.push_back(NOT_SET);
 			}
 
-			i_Stack.push(std::make_pair(0, 0));
+			i_Stack.push(olc::vi2d{0, 0});
 
 			i_VisitedCells = 1;
 
@@ -71,16 +61,16 @@ class MazeGenerator : public olc::PixelGameEngine
 				i_VisitedCells = 1;
 
 				// Setting all maze cell's directions to NOT_SET
-				for (int element = 0; element < v_Maze.size(); element++)
+				for (auto &element : v_Maze)
 				{
-					v_Maze[element] = NOT_SET;
+					element = NOT_SET;
 				}
 
 				// The top leftmost cell is going to be the starting point for the maze
-				i_Stack.push(std::make_pair(0, 0));
+				i_Stack.push(olc::vi2d{0, 0});
 			}
 
-			// As long as there are unvisited cells
+			// As long as there are unvisited cells, update the maze
 			if (i_VisitedCells < i_MazeWidth * i_MazeHeight)
 			{
 				std::vector<int> v_ValidNeighbours;
@@ -200,41 +190,40 @@ class MazeGenerator : public olc::PixelGameEngine
 			{
 				for (int px = 0; px < i_PathWidth; px++)
 				{
-					Draw(i_Stack.top().first * (i_PathWidth + 1) + px, i_Stack.top().second * (i_PathWidth + 1) + py, olc::GREEN);
+					Draw(i_Stack.top().x * (i_PathWidth + 1) + px, i_Stack.top().y * (i_PathWidth + 1) + py, olc::GREEN);
 				}
 			}
 
 		}
 
 		/**
-		 * @brief Returns an array of valid directions to choose from.
-		 * Accounts for the edge-case of maze cells on the literal edge of the maze
-		 * returning directions that would lead outside the maze.
+		 * @brief Returns an vector of valid directions to choose from.
+		 * Maze cells outside the edge of the maze are not added to the vector
 		 *
 		 * @param neighbours Vector with all valid directions to choose from
 		 */
 		void CheckForValidNeighbours(std::vector<int>& neighbours)
 		{
-			// Check for valid northern neighbour
-			if (i_Stack.top().second > 0)
+			// Check northern neighbor if it exists
+			if (i_Stack.top().y > 0)
 			{
 				CheckNeighbour(0, -1, NORTH, neighbours);
 			}
 
-			// Check for valid western neighbour
-			if (i_Stack.top().first > 0)
+			// Check western neighbor if it exists
+			if (i_Stack.top().x > 0)
 			{
 				CheckNeighbour(-1, 0, WEST, neighbours);
 			}
 
-			// Check for valid southern neighbour
-			if (i_Stack.top().second < i_MazeWidth - 1)
+			// Check southern neighbor if it exists
+			if (i_Stack.top().y < i_MazeWidth - 1)
 			{
 				CheckNeighbour(0, 1, SOUTH, neighbours);
 			}
 
-			// Check for valid eastern neighbour
-			if (i_Stack.top().first < i_MazeHeight - 1)
+			// Check eastern neighbor if it exists
+			if (i_Stack.top().x < i_MazeHeight - 1)
 			{
 				CheckNeighbour(1, 0, EAST, neighbours);
 			}
@@ -292,20 +281,24 @@ class MazeGenerator : public olc::PixelGameEngine
 			}
 
 			// ? why do we only push the coordinates onto the stack?
-			i_Stack.push(std::make_pair(i_Stack.top().first + x, i_Stack.top().second + y));
+			i_Stack.push(olc::vi2d{i_Stack.top().x + x, i_Stack.top().y + y});
 		}
 
-		// Returns the position of a cell in v_Maze (basically converts a pair to a single integer)
+		// Returns the position of a cell in v_Maze (basically converts a vi2d to a single integer)
 		int Position(int x, int y)
 		{
-			return (i_Stack.top().second + y) * i_MazeWidth + (i_Stack.top().first + x);
+			return (i_Stack.top().y + y) * i_MazeWidth + (i_Stack.top().x + x);
 		}
 };
 
 int main()
 {
 	MazeGenerator instance;
+
 	if (instance.Construct(200, 200, 4, 4))
+	{
 		instance.Start();
+	}
+
 	return 0;
 }
