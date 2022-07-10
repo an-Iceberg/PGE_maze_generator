@@ -12,22 +12,19 @@ enum Direction
 };
 
 struct cell {
-  bool interiorIsPainted;
-  bool wallIsPainted;
+  bool hasBeenPainted;
   Direction direction;
 
 public:
   cell()
   {
-    interiorIsPainted = false;
-    wallIsPainted = false;
+    hasBeenPainted = false;
     direction = NOT_SET;
   }
 
-  cell(bool interiorIsPainted, bool wallIsPainted, Direction direction)
+  cell(bool hasBeenPainted, Direction direction)
   {
-    this->interiorIsPainted = interiorIsPainted;
-    this->wallIsPainted = wallIsPainted;
+    this->hasBeenPainted = hasBeenPainted;
     this->direction = direction;
   }
 };
@@ -57,7 +54,6 @@ public:
     // Initializing the random number generator
     srand(time(nullptr));
 
-    // TODO OPTIONAL: make maze width and height user adjustable
     mazeHeight = 50;
     mazeWidth = 50;
     cellCount = mazeWidth * mazeHeight;
@@ -83,12 +79,15 @@ public:
     // Generate new maze when ENTER key is pressed
     if (GetKey(olc::Key::ENTER).bPressed)
     {
+      Clear(olc::BLACK);
+
       visitedCellsCounter = 1;
 
-      // Setting all maze cell's directions to NOT_SET
-      for (auto &cell : mazeDirections)
+      // Resetting all maze data
+      for (std::vector<cell>::iterator cell = mazeDirections.begin(); cell < mazeDirections.end(); cell++)
       {
-        cell.direction = NOT_SET;
+        cell->direction = NOT_SET;
+        cell->hasBeenPainted = false;
       }
 
       // The top leftmost cell is going to be the starting point for the maze
@@ -109,8 +108,11 @@ public:
         // Chooses a random neighbour from all valid neighbours
         Direction nextCellDirection = validNeighbours[rand() % validNeighbours.size()];
 
+        cell& currentCell = mazeDirections[IndexOfCurrentCell()];
+
         // Set the current cell's direction to point towards the selected neighbour
-        mazeDirections[IndexOfCurrentCell()].direction = nextCellDirection;
+        currentCell.direction = nextCellDirection;
+        currentCell.hasBeenPainted = false;
 
         // Push the selected cell onto the stack
         unvisitedCells.push(CoordinatesOfNeighbour(nextCellDirection));
@@ -144,10 +146,25 @@ public:
             previousCell.direction = LEFT;
           break;
         }
+
+        previousCell.hasBeenPainted = false;
       }
+
+      PaintingRoutine();
     }
 
-    PaintingRoutine();
+    // TODO: paint the top of the stack
+    // Draws the top of the stack
+    // olc::vi2d topOfTheStack = {unvisitedCells.top().x, unvisitedCells.top().y};
+    // for (int py = 0; py < pathWidth; py++)
+    // {
+    //   for (int px = 0; px < pathWidth; px++)
+    //   {
+    //     Draw(unvisitedCells.top().x * (pathWidth + 1) + px + 1, unvisitedCells.top().y * (pathWidth + 1) + py + 1, olc::GREEN);
+    //   }
+    // }
+
+    // TODO: fill in the last cell and don't paint the top of the stack anymore
 
     // TODO: add user adjustable delay
 
@@ -163,9 +180,7 @@ public:
    */
   void PaintingRoutine()
   {
-    // TODO: add one pixels to the top and left everywhere
-    // TODO: implement the painting routine in such a way that there is no need to clear the screen on every frame (for efficiency)
-    Clear(olc::BLACK);
+    // Clear(olc::BLACK);
 
     // Draws each cell
     for (std::vector<cell>::iterator cell = mazeDirections.begin(); cell < mazeDirections.end(); cell++)
@@ -177,120 +192,56 @@ public:
       // y = index / height
       olc::vi2d currentCell = {currentCellIndex % mazeHeight, currentCellIndex / mazeHeight};
 
-      // Drawing the cell depending on its direction
-      // Initially, all cells are going to be drawn as NOT_SET so when a direction is set all we need to do
-      // is paint over the correct wall (and fill the interior with white)
-      // TODO: to improve efficiency set a bool for each cell if the interior has already been painted (that way we avoid re-painting it and improve speed)
-      // TODO: don't re-paint cell interior if it has already been painted
-      switch (mazeDirections[currentCellIndex].direction)
+      // Painting the cell only if it hasn't been painted before
+      if (!cell->hasBeenPainted)
       {
-        // Unvisited cells are drawin with blue interior
-        case NOT_SET:
-          // Draws the cell
-          for (int i = 0; i < pathWidth + 1; i++)
+        // Paints the cell
+        for (int i = 0; i < (cell->direction == NOT_SET ? pathWidth + 1 : pathWidth); i++)
+        {
+          // Paints the cell interior
+
+          // Diagonal
+          Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1, (cell->direction == NOT_SET ? olc::BLUE : olc::WHITE));
+
+          // Bottom triangle
+          Draw(currentCell.x + (currentCell.x * pathWidth + 0) + 1, currentCell.y + (currentCell.y * pathWidth + 1) + 1, (cell->direction == NOT_SET ? olc::BLUE : olc::WHITE));
+          Draw(currentCell.x + (currentCell.x * pathWidth + 0) + 1, currentCell.y + (currentCell.y * pathWidth + 2) + 1, (cell->direction == NOT_SET ? olc::BLUE : olc::WHITE));
+          Draw(currentCell.x + (currentCell.x * pathWidth + 1) + 1, currentCell.y + (currentCell.y * pathWidth + 2) + 1, (cell->direction == NOT_SET ? olc::BLUE : olc::WHITE));
+
+          // Top triangle
+          Draw(currentCell.x + (currentCell.x * pathWidth + 1) + 1, currentCell.y + (currentCell.y * pathWidth + 0) + 1, (cell->direction == NOT_SET ? olc::BLUE : olc::WHITE));
+          Draw(currentCell.x + (currentCell.x * pathWidth + 2) + 1, currentCell.y + (currentCell.y * pathWidth + 0) + 1, (cell->direction == NOT_SET ? olc::BLUE : olc::WHITE));
+          Draw(currentCell.x + (currentCell.x * pathWidth + 2) + 1, currentCell.y + (currentCell.y * pathWidth + 1) + 1, (cell->direction == NOT_SET ? olc::BLUE : olc::WHITE));
+
+          // Paints the respective wall
+          switch (cell->direction)
           {
-            // Paints the cell interior
-            if (i < pathWidth)
-            {
-              Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1, olc::DARK_BLUE);
+            case NOT_SET:
+              Draw(currentCell.x + (currentCell.x * pathWidth + pathWidth) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1, olc::BLACK);
+              Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + pathWidth) + 1, olc::BLACK);
+            break;
 
-              for (int j = 0; j < pathWidth; j++)
-              {
-                Draw(currentCell.x + (currentCell.x * pathWidth + j) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1, olc::DARK_BLUE);
-                Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + j) + 1, olc::DARK_BLUE);
-              }
-            }
+            case UP:
+              Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth - 1) + 1);
+            break;
 
-            // Walls
-            Draw(currentCell.x + (currentCell.x * pathWidth + pathWidth) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1, olc::BLACK);
-            Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + pathWidth) + 1, olc::BLACK);
+            case LEFT:
+              Draw(currentCell.x + (currentCell.x * pathWidth - 1) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1);
+            break;
+
+            case DOWN:
+              Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + pathWidth) + 1);
+            break;
+
+            case RIGHT:
+              Draw(currentCell.x + (currentCell.x * pathWidth + pathWidth) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1);
+            break;
           }
-        break;
+        }
 
-        case UP:
-          // Draws the cell
-          for (int i = 0; i < pathWidth; i++)
-          {
-            // Paints the cell interior
-            Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1);
-
-            for (int j = 0; j < pathWidth; j++)
-            {
-              Draw(currentCell.x + (currentCell.x * pathWidth + j) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1);
-              Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + j) + 1);
-            }
-
-            // Re-painting the upper neighbour's wall
-            Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth - 1) + 1);
-          }
-        break;
-
-        case LEFT:
-          // Draws the cell
-          for (int i = 0; i < pathWidth; i++)
-          {
-            // Paints the cell interior
-            Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1);
-
-            for (int j = 0; j < pathWidth; j++)
-            {
-              Draw(currentCell.x + (currentCell.x * pathWidth + j) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1);
-              Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + j) + 1);
-            }
-
-            // Re-painting the left neighbour's wall
-            Draw(currentCell.x + (currentCell.x * pathWidth - 1) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1);
-          }
-        break;
-
-        case DOWN:
-          // Draws the cell
-          for (int i = 0; i < pathWidth; i++)
-          {
-            // Paints the cell interior
-            Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1);
-
-            for (int j = 0; j < pathWidth; j++)
-            {
-              Draw(currentCell.x + (currentCell.x * pathWidth + j) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1);
-              Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + j) + 1);
-            }
-
-            // Re-painting the lower wall
-            Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + pathWidth) + 1);
-          }
-        break;
-
-        case RIGHT:
-          // Draws the cell
-          for (int i = 0; i < pathWidth; i++)
-          {
-            // Cell interior
-            Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1);
-
-            for (int j = 0; j < pathWidth; j++)
-            {
-              Draw(currentCell.x + (currentCell.x * pathWidth + j) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1);
-              Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + j) + 1);
-            }
-
-            // Re-painting the right wall
-            Draw(currentCell.x + (currentCell.x * pathWidth + pathWidth) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1);
-          }
-        break;
+        cell->hasBeenPainted = true;
       }
     }
-
-    // TODO: draw the top of the stack
-    // Draws the top of the stack
-    // olc::vi2d topOfTheStack = {unvisitedCells.top().x, unvisitedCells.top().y};
-    // for (int py = 0; py < pathWidth; py++)
-    // {
-    //   for (int px = 0; px < pathWidth; px++)
-    //   {
-    //     Draw(unvisitedCells.top().x * (pathWidth + 1) + px + 1, unvisitedCells.top().y * (pathWidth + 1) + py + 1, olc::GREEN);
-    //   }
-    // }
   }
 
   /**
