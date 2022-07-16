@@ -29,7 +29,6 @@ public:
   }
 };
 
-// TODO: add UI section on top with controls for delay
 class MazeGenerator : public olc::PixelGameEngine
 {
 public:
@@ -39,17 +38,17 @@ public:
   }
 
 private:
-
   int mazeWidth; // Maze width in maze cells
   int mazeHeight; // Maze height in maze cells
   int cellCount; // Number of cells in the maze
   int pathWidth; // Path width in pixels
   std::vector<cell> maze; // Vector containing all cells and their data/information
-  // ? why is this necessary?
+  // TODO: maybe we can do without visitedCellsCounter
   int visitedCellsCounter; // Number of cells that has been visited
   std::stack<olc::vi2d> unvisitedCells; // Contains all maze cells (as coordinates) who's direction has not yet been set
   float delay; // Delay in seconds
   float timePassed;
+  int UISectionHeight;
 
 public:
   bool OnUserCreate() override
@@ -62,7 +61,8 @@ public:
     cellCount = mazeWidth * mazeHeight;
     pathWidth = 3;
     visitedCellsCounter = cellCount + 1;
-    delay = 0.000f;
+    delay = 0.01f;
+    UISectionHeight = 20;
 
     // Set all the maze cells to have no direction
     for (int i = 0; i < cellCount; i++)
@@ -72,6 +72,15 @@ public:
 
     Clear(olc::BLACK);
 
+    // Drawing the UI section
+    DrawRect(0, 0, ScreenWidth() - 1, UISectionHeight - 1, olc::CYAN);
+    DrawString(1, 2, "[ENTER]", olc::MAGENTA);
+    DrawString(57, 2, ": new maze", olc::GREY);
+    DrawString(1, 10, "adjust delay:", olc::GREY);
+    DrawString(113, 10, "<- ", olc::MAGENTA);
+    DrawString(137, 10, std::to_string(delay).substr(3, 2) + "ms", olc::GREY);
+    DrawString(169, 10, " ->", olc::MAGENTA);
+
     PaintingRoutine();
 
     return true;
@@ -79,10 +88,42 @@ public:
 
   bool OnUserUpdate(float fElapsedTime) override
   {
-    // Generate new maze when ENTER key is pressed
-    if (GetKey(olc::Key::ENTER).bPressed)
+    // Decreasing delay
+    if (GetKey(olc::Key::LEFT).bPressed)
     {
-      Clear(olc::BLACK);
+      delay -= 0.001f;
+
+      // Accounting for negative overflow
+      if (delay < 0.000f)
+      {
+        delay = 0.000f;
+      }
+
+      // Re-painting the number in the UI section
+      FillRect(137, 10, 31, 7, olc::BLACK);
+      DrawString(137, 10, std::to_string(delay).substr(3, 2) + "ms", olc::GREY);
+    }
+
+    // Increasing delay
+    if (GetKey(olc::Key::RIGHT).bPressed)
+    {
+      delay += 0.001f;
+
+      // The biggest delay shall be 10 millisecond
+      if (delay > 0.01f)
+      {
+        delay = 0.01f;
+      }
+
+      // Re-painting the number in the UI section
+      FillRect(137, 10, 31, 7, olc::BLACK);
+      DrawString(137, 10, std::to_string(delay).substr(3, 2) + "ms", olc::GREY);
+    }
+
+    // Generate new maze when ENTER key is pressed
+    if (GetKey(olc::Key::ENTER).bPressed || GetMouse(0).bPressed)
+    {
+      FillRect(0, UISectionHeight, ScreenWidth(), ScreenHeight(), olc::BLACK);
 
       visitedCellsCounter = 1;
 
@@ -102,7 +143,7 @@ public:
     // Only draw after a certain delay time has been reached
     if (timePassed > delay)
     {
-      // Reset delay counter
+      // Reset delay timer
       timePassed = 0;
 
       // As long as there are unvisited cells, update the maze
@@ -172,9 +213,8 @@ public:
   // -----
 
 
-  /**
-   * @brief Draws the maze to the screen
-   */
+private:
+  // Draws the maze to the screen
   void PaintingRoutine()
   {
     // Draws each cell
@@ -233,19 +273,19 @@ public:
   void paintCellInterior(const olc::vi2d& currentCell, const olc::Pixel& interiorColor)
   {
     // Bottom triangle
-    Draw(currentCell.x + (currentCell.x * pathWidth + 0) + 1, currentCell.y + (currentCell.y * pathWidth + 1) + 1, interiorColor);
-    Draw(currentCell.x + (currentCell.x * pathWidth + 0) + 1, currentCell.y + (currentCell.y * pathWidth + 2) + 1, interiorColor);
-    Draw(currentCell.x + (currentCell.x * pathWidth + 1) + 1, currentCell.y + (currentCell.y * pathWidth + 2) + 1, interiorColor);
+    Draw(currentCell.x + (currentCell.x * pathWidth + 0) + 1, currentCell.y + (currentCell.y * pathWidth + 1) + 1 + UISectionHeight, interiorColor);
+    Draw(currentCell.x + (currentCell.x * pathWidth + 0) + 1, currentCell.y + (currentCell.y * pathWidth + 2) + 1 + UISectionHeight, interiorColor);
+    Draw(currentCell.x + (currentCell.x * pathWidth + 1) + 1, currentCell.y + (currentCell.y * pathWidth + 2) + 1 + UISectionHeight, interiorColor);
 
     // Top triangle
-    Draw(currentCell.x + (currentCell.x * pathWidth + 1) + 1, currentCell.y + (currentCell.y * pathWidth + 0) + 1, interiorColor);
-    Draw(currentCell.x + (currentCell.x * pathWidth + 2) + 1, currentCell.y + (currentCell.y * pathWidth + 0) + 1, interiorColor);
-    Draw(currentCell.x + (currentCell.x * pathWidth + 2) + 1, currentCell.y + (currentCell.y * pathWidth + 1) + 1, interiorColor);
+    Draw(currentCell.x + (currentCell.x * pathWidth + 1) + 1, currentCell.y + (currentCell.y * pathWidth + 0) + 1 + UISectionHeight, interiorColor);
+    Draw(currentCell.x + (currentCell.x * pathWidth + 2) + 1, currentCell.y + (currentCell.y * pathWidth + 0) + 1 + UISectionHeight, interiorColor);
+    Draw(currentCell.x + (currentCell.x * pathWidth + 2) + 1, currentCell.y + (currentCell.y * pathWidth + 1) + 1 + UISectionHeight, interiorColor);
 
     // Paints the cell diagonal
     for (int i = 0; i < pathWidth; i++)
     {
-      Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1, interiorColor);
+      Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1 + UISectionHeight, interiorColor);
     }
   }
 
@@ -257,75 +297,55 @@ public:
       switch (direction)
       {
         case NOT_SET:
-          Draw(currentCell.x + (currentCell.x * pathWidth + pathWidth) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1, olc::BLACK);
-          Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + pathWidth) + 1, olc::BLACK);
+          Draw(currentCell.x + (currentCell.x * pathWidth + pathWidth) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1 + UISectionHeight, olc::BLACK);
+          Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + pathWidth) + 1 + UISectionHeight, olc::BLACK);
         break;
 
         case UP:
-          Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth - 1) + 1);
+          Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth - 1) + 1 + UISectionHeight);
         break;
 
         case LEFT:
-          Draw(currentCell.x + (currentCell.x * pathWidth - 1) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1);
+          Draw(currentCell.x + (currentCell.x * pathWidth - 1) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1 + UISectionHeight);
         break;
 
         case DOWN:
-          Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + pathWidth) + 1);
+          Draw(currentCell.x + (currentCell.x * pathWidth + i) + 1, currentCell.y + (currentCell.y * pathWidth + pathWidth) + 1 + UISectionHeight);
         break;
 
         case RIGHT:
-          Draw(currentCell.x + (currentCell.x * pathWidth + pathWidth) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1);
+          Draw(currentCell.x + (currentCell.x * pathWidth + pathWidth) + 1, currentCell.y + (currentCell.y * pathWidth + i) + 1 + UISectionHeight);
         break;
       }
     }
   }
 
-  /**
-   * @brief Returns an vector of valid directions to choose from.
-   * Maze cells outside the edge of the maze are not added to the vector
-   *
-   * @param neighbours Vector with all valid directions to choose from
-   */
+  // Returns an vector of valid directions to choose from.
+  // Maze cells outside the edge of the maze are not added to the vector
   void addAllValidNeighbours(std::vector<Direction>& neighbours)
   {
-    // Check if upper neighbour exists
-    if (unvisitedCells.top().y > 0)
+    // If the upper neighbour exists and is not set, add it as a valid neighbour
+    if (unvisitedCells.top().y > 0 && maze[IndexOfNeighbour(Direction{UP})].direction == NOT_SET)
     {
-      // If the upper neightbour's direction is not set add it as a valid neighbour
-      if (maze[IndexOfNeighbour(Direction{UP})].direction == NOT_SET)
-      {
-        neighbours.push_back(Direction{UP});
-      }
+      neighbours.push_back(Direction{UP});
     }
 
-    // Check if left neighbour exists
-    if (unvisitedCells.top().x > 0)
+    // If the left neighbour exists and is not set, add it as a valid neighbour
+    if (unvisitedCells.top().x > 0 && maze[IndexOfNeighbour(Direction{LEFT})].direction == NOT_SET)
     {
-      // If the left neightbour's direction is not set add it as a valid neighbour
-      if (maze[IndexOfNeighbour(Direction{LEFT})].direction == NOT_SET)
-      {
-        neighbours.push_back(Direction{LEFT});
-      }
+      neighbours.push_back(Direction{LEFT});
     }
 
-    // Check if lower neighbour exists
-    if (unvisitedCells.top().y < mazeWidth - 1)
+    // If the lower neighbour exists and is not set, add it as a valid neighbour
+    if (unvisitedCells.top().y < mazeWidth - 1 && maze[IndexOfNeighbour(Direction{DOWN})].direction == NOT_SET)
     {
-      // If the lower neightbour's direction is not set add it as a valid neighbour
-      if (maze[IndexOfNeighbour(Direction{DOWN})].direction == NOT_SET)
-      {
-        neighbours.push_back(Direction{DOWN});
-      }
+      neighbours.push_back(Direction{DOWN});
     }
 
-    // Check if right neighbour exists
-    if (unvisitedCells.top().x < mazeHeight - 1)
+    // If the right neighbour exists and is not set, add it as a valid neighbour
+    if (unvisitedCells.top().x < mazeHeight - 1 && maze[IndexOfNeighbour(Direction{RIGHT})].direction == NOT_SET)
     {
-      // If the right neightbour's direction is not set add it as a valid neighbour
-      if (maze[IndexOfNeighbour(Direction{RIGHT})].direction == NOT_SET)
-      {
-        neighbours.push_back(Direction{RIGHT});
-      }
+      neighbours.push_back(Direction{RIGHT});
     }
   }
 
@@ -419,7 +439,7 @@ int main()
 {
   MazeGenerator instance;
 
-  if (instance.Construct(201, 201, 4, 4))
+  if (instance.Construct(201, 221, 4, 4))
   {
     instance.Start();
   }
