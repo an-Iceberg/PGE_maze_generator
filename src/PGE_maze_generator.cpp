@@ -38,17 +38,17 @@ public:
   }
 
 private:
-  int mazeWidth; // Maze width in maze cells
-  int mazeHeight; // Maze height in maze cells
-  int cellCount; // Number of cells in the maze
-  int pathWidth; // Path width in pixels
-  std::vector<cell> maze; // Vector containing all cells and their data/information
+  const int mazeWidth = 50; // Maze width in maze cells
+  const int mazeHeight = 50; // Maze height in maze cells
+  const int cellCount = 2500; // Number of cells in the maze
+  const int pathWidth = 3; // Path width in pixels
+  cell maze[2500]; // Vector containing all cells and their data/information
   // TODO: maybe we can do without visitedCellsCounter
   int visitedCellsCounter; // Number of cells that has been visited
   std::stack<olc::vi2d> unvisitedCells; // Contains all maze cells (as coordinates) who's direction has not yet been set
   float delay; // Delay in seconds
   float timePassed;
-  int UISectionHeight;
+  const int UISectionHeight = 20;
 
 public:
   bool OnUserCreate() override
@@ -56,18 +56,13 @@ public:
     // Initializing the random number generator
     srand(time(nullptr));
 
-    mazeHeight = 50;
-    mazeWidth = 50;
-    cellCount = mazeWidth * mazeHeight;
-    pathWidth = 3;
     visitedCellsCounter = cellCount + 1;
     delay = 0.01f;
-    UISectionHeight = 20;
 
     // Set all the maze cells to have no direction
-    for (int i = 0; i < cellCount; i++)
+    for (cell& cell : maze)
     {
-      maze.push_back(cell());
+      cell.direction = NOT_SET;
     }
 
     Clear(olc::BLACK);
@@ -128,10 +123,10 @@ public:
       visitedCellsCounter = 1;
 
       // Resetting all maze data
-      for (std::vector<cell>::iterator cell = maze.begin(); cell < maze.end(); cell++)
+      for (cell& cell : maze)
       {
-        cell->direction = NOT_SET;
-        cell->hasBeenPainted = false;
+        cell.direction = NOT_SET;
+        cell.hasBeenPainted = false;
       }
 
       // The top leftmost cell is going to be the starting point for the maze
@@ -217,23 +212,22 @@ private:
   // Draws the maze to the screen
   void PaintingRoutine()
   {
+    // TODO: rework this to use for (cell& cell : maze)
     // Draws each cell
-    for (std::vector<cell>::iterator cell = maze.begin(); cell < maze.end(); cell++)
+    for (int currentCellIndex = 0; currentCellIndex < cellCount; currentCellIndex++)
     {
-      int currentCellIndex = std::distance(maze.begin(), cell);
-
       // Calculating the x and y coordinates of the current cell
       // x = index % height
       // y = index / height
       olc::vi2d currentCell = {currentCellIndex % mazeHeight, currentCellIndex / mazeHeight};
 
       // Painting the cell only if it hasn't been painted before
-      if (!cell->hasBeenPainted)
+      if (!maze[currentCellIndex].hasBeenPainted)
       {
         olc::Pixel interiorColor;
 
         // Paints the cell interior
-        if (cell->direction == NOT_SET)
+        if (maze[currentCellIndex].direction == NOT_SET)
         {
           interiorColor = olc::BLUE;
         }
@@ -243,9 +237,9 @@ private:
         }
 
         paintCellInterior(currentCell, interiorColor);
-        paintCellWall(currentCell, cell->direction);
+        paintCellWall(currentCell, maze[currentCellIndex].direction);
 
-        cell->hasBeenPainted = true;
+        maze[currentCellIndex].hasBeenPainted = true;
       }
 
       // If this cell is the top of the stack
@@ -325,27 +319,27 @@ private:
   void addAllValidNeighbours(std::vector<Direction>& neighbours)
   {
     // If the upper neighbour exists and is not set, add it as a valid neighbour
-    if (unvisitedCells.top().y > 0 && maze[IndexOfNeighbour(Direction{UP})].direction == NOT_SET)
+    if (unvisitedCells.top().y > 0 && maze[IndexOfNeighbour(UP)].direction == NOT_SET)
     {
-      neighbours.push_back(Direction{UP});
+      neighbours.push_back(UP);
     }
 
     // If the left neighbour exists and is not set, add it as a valid neighbour
-    if (unvisitedCells.top().x > 0 && maze[IndexOfNeighbour(Direction{LEFT})].direction == NOT_SET)
+    if (unvisitedCells.top().x > 0 && maze[IndexOfNeighbour(LEFT)].direction == NOT_SET)
     {
-      neighbours.push_back(Direction{LEFT});
+      neighbours.push_back(LEFT);
     }
 
     // If the lower neighbour exists and is not set, add it as a valid neighbour
-    if (unvisitedCells.top().y < mazeWidth - 1 && maze[IndexOfNeighbour(Direction{DOWN})].direction == NOT_SET)
+    if (unvisitedCells.top().y < mazeWidth - 1 && maze[IndexOfNeighbour(DOWN)].direction == NOT_SET)
     {
-      neighbours.push_back(Direction{DOWN});
+      neighbours.push_back(DOWN);
     }
 
     // If the right neighbour exists and is not set, add it as a valid neighbour
-    if (unvisitedCells.top().x < mazeHeight - 1 && maze[IndexOfNeighbour(Direction{RIGHT})].direction == NOT_SET)
+    if (unvisitedCells.top().x < mazeHeight - 1 && maze[IndexOfNeighbour(RIGHT)].direction == NOT_SET)
     {
-      neighbours.push_back(Direction{RIGHT});
+      neighbours.push_back(RIGHT);
     }
   }
 
