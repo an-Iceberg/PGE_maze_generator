@@ -49,6 +49,7 @@ private:
   float delay; // Delay in seconds
   float timePassed;
   const int UISectionHeight = 20;
+  olc::vi2d mouse;
 
 public:
   bool OnUserCreate() override
@@ -69,12 +70,12 @@ public:
 
     // Drawing the UI section
     DrawRect(0, 0, ScreenWidth() - 1, UISectionHeight - 1, olc::CYAN);
-    DrawString(1, 2, "[ENTER]", olc::MAGENTA);
-    DrawString(57, 2, ": new maze", olc::GREY);
+    DrawString(129, 2, "ENTER", olc::MAGENTA);
+    DrawString(1, 2, "create new maze:", olc::GREY);
     DrawString(1, 10, "adjust delay:", olc::GREY);
-    DrawString(113, 10, "<- ", olc::MAGENTA);
-    DrawString(137, 10, std::to_string(delay).substr(3, 2) + "ms", olc::GREY);
-    DrawString(169, 10, " ->", olc::MAGENTA);
+    DrawString(105, 10, "<", olc::MAGENTA);
+    DrawString(113, 10, std::to_string(delay).substr(3, 2) + "ms", olc::GREY);
+    DrawString(145, 10, ">", olc::MAGENTA);
 
     PaintingRoutine();
 
@@ -83,8 +84,10 @@ public:
 
   bool OnUserUpdate(float fElapsedTime) override
   {
-    // Decreasing delay
-    if (GetKey(olc::Key::LEFT).bPressed)
+    mouse = {GetMouseX(), GetMouseY()};
+
+    // Decreasing delay (accounting for clicking the character on screen)
+    if (GetKey(olc::Key::LEFT).bPressed || (mouse.x > 104 && mouse.y > 9 && mouse.x < 104 + 6 && mouse.y < 9 + 8 && GetMouse(0).bPressed))
     {
       delay -= 0.001f;
 
@@ -95,12 +98,12 @@ public:
       }
 
       // Re-painting the number in the UI section
-      FillRect(137, 10, 31, 7, olc::BLACK);
-      DrawString(137, 10, std::to_string(delay).substr(3, 2) + "ms", olc::GREY);
+      FillRect(113, 10, 31, 7, olc::BLACK);
+      DrawString(113, 10, std::to_string(delay).substr(3, 2) + "ms", olc::GREY);
     }
 
-    // Increasing delay
-    if (GetKey(olc::Key::RIGHT).bPressed)
+    // Increasing delay (accounting for clicking the character on screen)
+    if (GetKey(olc::Key::RIGHT).bPressed || (mouse.x > 145 && mouse.y > 9 && mouse.x < 145 + 6 && mouse.y < 9 + 8 && GetMouse(0).bPressed))
     {
       delay += 0.001f;
 
@@ -111,12 +114,12 @@ public:
       }
 
       // Re-painting the number in the UI section
-      FillRect(137, 10, 31, 7, olc::BLACK);
-      DrawString(137, 10, std::to_string(delay).substr(3, 2) + "ms", olc::GREY);
+      FillRect(113, 10, 31, 7, olc::BLACK);
+      DrawString(113, 10, std::to_string(delay).substr(3, 2) + "ms", olc::GREY);
     }
 
-    // Generate new maze when ENTER key is pressed
-    if (GetKey(olc::Key::ENTER).bPressed || GetMouse(0).bPressed)
+    // Generate new maze when ENTER key is pressed (accounting for clicking the character on screen)
+    if (GetKey(olc::Key::ENTER).bPressed || (mouse.x > 128 && mouse.y > 1 && mouse.x < 129 + 39 && mouse.y < 2 + 7 && GetMouse(0).bPressed))
     {
       FillRect(0, UISectionHeight, ScreenWidth(), ScreenHeight(), olc::BLACK);
 
