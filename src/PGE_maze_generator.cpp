@@ -87,7 +87,7 @@ public:
     mouse = {GetMouseX(), GetMouseY()};
 
     // Decreasing delay (accounting for clicking the character on screen)
-    if (GetKey(olc::Key::LEFT).bPressed || (mouse.x > 104 && mouse.y > 9 && mouse.x < 104 + 6 && mouse.y < 9 + 8 && GetMouse(0).bPressed))
+    if (GetKey(olc::Key::LEFT).bPressed or (mouse.x > 104 and mouse.y > 9 and mouse.x < 104 + 6 and mouse.y < 9 + 8 and GetMouse(0).bPressed))
     {
       delay -= 0.001f;
 
@@ -103,7 +103,7 @@ public:
     }
 
     // Increasing delay (accounting for clicking the character on screen)
-    if (GetKey(olc::Key::RIGHT).bPressed || (mouse.x > 145 && mouse.y > 9 && mouse.x < 145 + 6 && mouse.y < 9 + 8 && GetMouse(0).bPressed))
+    if (GetKey(olc::Key::RIGHT).bPressed or (mouse.x > 145 and mouse.y > 9 and mouse.x < 145 + 6 and mouse.y < 9 + 8 and GetMouse(0).bPressed))
     {
       delay += 0.001f;
 
@@ -119,7 +119,7 @@ public:
     }
 
     // Generate new maze when ENTER key is pressed (accounting for clicking the character on screen)
-    if (GetKey(olc::Key::ENTER).bPressed || (mouse.x > 128 && mouse.y > 1 && mouse.x < 129 + 39 && mouse.y < 2 + 7 && GetMouse(0).bPressed))
+    if (GetKey(olc::Key::ENTER).bPressed or (mouse.x > 128 and mouse.y > 1 and mouse.x < 129 + 39 and mouse.y < 2 + 7 and GetMouse(0).bPressed))
     {
       FillRect(0, UISectionHeight, ScreenWidth(), ScreenHeight(), olc::BLACK);
 
@@ -153,7 +153,7 @@ public:
         addAllValidNeighbours(validNeighbours);
 
         // If there are any valid neighbours choose a random one
-        if (!validNeighbours.empty())
+        if (not validNeighbours.empty())
         {
           // Chooses a random neighbour from all valid neighbours
           Direction nextCellDirection = validNeighbours[rand() % validNeighbours.size()];
@@ -225,7 +225,7 @@ private:
       olc::vi2d currentCell = {currentCellIndex % mazeHeight, currentCellIndex / mazeHeight};
 
       // Painting the cell only if it hasn't been painted before
-      if (!maze[currentCellIndex].hasBeenPainted)
+      if (not maze[currentCellIndex].hasBeenPainted)
       {
         olc::Pixel interiorColor;
 
@@ -249,7 +249,7 @@ private:
       // HACK: the -1 correction on the x is necessary for some reason
       currentCell.x--;
 
-      if (!unvisitedCells.empty() && currentCell.x == unvisitedCells.top().x && currentCell.y == unvisitedCells.top().y)
+      if (not (unvisitedCells.empty()) and currentCell.x == unvisitedCells.top().x and currentCell.y == unvisitedCells.top().y)
       {
         // On the last painting cycle the top of the stack is painted as a regular cell
         if (visitedCellsCounter == cellCount)
@@ -322,25 +322,25 @@ private:
   void addAllValidNeighbours(std::vector<Direction>& neighbours)
   {
     // If the upper neighbour exists and is not set, add it as a valid neighbour
-    if (unvisitedCells.top().y > 0 && maze[IndexOfNeighbour(UP)].direction == NOT_SET)
+    if (unvisitedCells.top().y > 0 and maze[IndexOfNeighbour(UP)].direction == NOT_SET)
     {
       neighbours.push_back(UP);
     }
 
     // If the left neighbour exists and is not set, add it as a valid neighbour
-    if (unvisitedCells.top().x > 0 && maze[IndexOfNeighbour(LEFT)].direction == NOT_SET)
+    if (unvisitedCells.top().x > 0 and maze[IndexOfNeighbour(LEFT)].direction == NOT_SET)
     {
       neighbours.push_back(LEFT);
     }
 
     // If the lower neighbour exists and is not set, add it as a valid neighbour
-    if (unvisitedCells.top().y < mazeWidth - 1 && maze[IndexOfNeighbour(DOWN)].direction == NOT_SET)
+    if (unvisitedCells.top().y < mazeWidth - 1 and maze[IndexOfNeighbour(DOWN)].direction == NOT_SET)
     {
       neighbours.push_back(DOWN);
     }
 
     // If the right neighbour exists and is not set, add it as a valid neighbour
-    if (unvisitedCells.top().x < mazeHeight - 1 && maze[IndexOfNeighbour(RIGHT)].direction == NOT_SET)
+    if (unvisitedCells.top().x < mazeHeight - 1 and maze[IndexOfNeighbour(RIGHT)].direction == NOT_SET)
     {
       neighbours.push_back(RIGHT);
     }
